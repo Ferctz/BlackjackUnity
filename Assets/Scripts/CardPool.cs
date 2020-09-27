@@ -22,6 +22,7 @@ namespace Blackjack
         {
             o.DisableCard();
             o.gameObject.SetActive(false);
+            o.transform.SetParent(transform);
         }
 
         private void ResetCard(Card o, Vector3 pos, Quaternion rot)
