@@ -51,5 +51,10 @@ namespace Blackjack
             card = default(CardData);
             return false;
         }
+
+        public int GetCardCount()
+        {
+            return cards.Count;
+        }
     }
 }

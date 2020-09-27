@@ -82,6 +82,14 @@ namespace Blackjack
 
             handState.text = state.ToString();
         }
+
+        public virtual void ClearHand()
+        {
+            scoreText.text = string.Empty;
+            handState.text = string.Empty;
+
+            scorerData.hands.Clear();
+        }
     }
 
     [Serializable]

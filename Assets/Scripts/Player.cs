@@ -59,5 +59,17 @@ namespace Blackjack
         {
             playerTurnIndicator.SetActive(false);
         }
+
+        public void Payout(int winnings)
+        {
+            int newCash = scorerData.cash + winnings;
+            SetCash(newCash);
+        }
+
+        public override void ClearHand()
+        {
+            base.ClearHand();
+            betText.text = string.Empty;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Blackjack.Utils;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,6 +32,7 @@ namespace Blackjack
         [SerializeField] private Player[] players;
 
         [SerializeField] private CardPool cardPool;
+        private List<Card> cardsDealt = new List<Card>();
 
         private int currentPlayerTurnIndex = -1;
 
@@ -57,6 +59,8 @@ namespace Blackjack
             standButton.onClick.AddListener(PlayerStand);
             hitButton.onClick.AddListener(PlayerHit);
             doubleButton.onClick.AddListener(PlayerDouble);
+            rebetButton.onClick.AddListener(Rebet);
+            newGameButton.onClick.AddListener(NewGame);
 
             for (int i = 0; i < players.Length; i++)
             {
@@ -74,7 +78,7 @@ namespace Blackjack
             stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, ExitBettingState);
             stateMachine.Add(GameState.Dealing, EnterDealingState, UpdateDealingState, null);
             stateMachine.Add(GameState.Playing, EnterPlayingState, UpdatePlayingState, null);
-            stateMachine.Add(GameState.Result, null, null, null);            
+            stateMachine.Add(GameState.Result, EnterResultState, null, ExitResultState);            
 
             stateMachine.SwitchTo(GameState.Shuffle);
         }
@@ -123,6 +127,8 @@ namespace Blackjack
                     card.Initialize(cardSprite, cardData);
 
                     scorer.AddCard(card);
+
+                    cardsDealt.Add(card);
                 }
             }
         }
@@ -205,6 +211,15 @@ namespace Blackjack
             doubleButton.gameObject.SetActive(isVisible);
         }
 
+        private void ReturnCards()
+        {
+            for (int i = 0; i < cardsDealt.Count; i++)
+            {
+                cardPool.Release(cardsDealt[i]);
+            }
+            cardsDealt.Clear();
+        }
+
         #region UI Actions
         private void DealCards()
         {
@@ -245,6 +260,54 @@ namespace Blackjack
             }
 
             StartNextPlayerTurn();
+        }
+
+        private void Rebet()
+        {
+            ReturnCards();
+            dealer.ClearHand();
+            dealer.Initialize(startingPlayerCash.Value);
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].scorerData.hands == null ||
+                    players[i].scorerData.hands.Count == 0)
+                {
+                    continue;
+                }
+
+                players[i].ClearHand();
+                players[i].Initialize(players[i].scorerData.cash);
+            }
+
+            if (deck.GetCardCount() < 52)
+            {
+                stateMachine.SwitchTo(GameState.Shuffle);
+            }
+            else
+            {
+                stateMachine.SwitchTo(GameState.Betting);
+            }
+        }
+
+        private void NewGame()
+        {
+            ReturnCards();
+            dealer.ClearHand();
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].scorerData.hands == null ||
+                    players[i].scorerData.hands.Count == 0)
+                {
+                    continue;
+                }
+
+                players[i].ClearHand();
+                players[i].SetCash(0, false);
+            }
+
+            stateMachine.SwitchTo(GameState.Shuffle);
         }
 
         #endregion
@@ -373,6 +436,48 @@ namespace Blackjack
             {
                 stateMachine.SwitchTo(GameState.Result);
             }
+        }
+
+        private void EnterResultState()
+        {
+            // compare player hands with dealer
+            for (int i = 0; i < players.Length; i++)
+            {
+                // ie if player not initialized nor in this round
+                if (players[i].scorerData.hands == null || players[i].scorerData.hands.Count == 0 ||
+                    players[i].scorerData.hands[0].bet == 0)
+                {
+                    continue;
+                }
+
+                // TODO: once hand splitting is complete, iterate through all hands for possible wins
+                if (players[i].scorerData.hands[0].handState == HandState.Bust)
+                {
+                    continue;
+                }
+
+                // award payout if hand score greater than dealer's, or if dealer has bust
+                if (players[i].scorerData.hands[0].score > dealer.scorerData.hands[0].score ||
+                    dealer.scorerData.hands[0].handState == HandState.Bust)
+                {
+                    players[i].SetHandState(HandState.Win);
+                    int winnings = 2 * players[i].scorerData.hands[0].bet;
+                    players[i].Payout(winnings);
+                }
+                else
+                {
+                    players[i].SetHandState(HandState.Lose);
+                }
+            }
+
+            rebetButton.gameObject.SetActive(true);
+            newGameButton.gameObject.SetActive(true);
+        }
+
+        private void ExitResultState()
+        {
+            rebetButton.gameObject.SetActive(false);
+            newGameButton.gameObject.SetActive(false);
         }
         #endregion
     }
