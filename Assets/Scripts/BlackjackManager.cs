@@ -1,5 +1,6 @@
 ﻿using Blackjack.Utils;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,6 +36,12 @@ namespace Blackjack
         private List<Card> cardsDealt = new List<Card>();
 
         private int currentPlayerTurnIndex = -1;
+
+        /// <summary> Serializable class for saving/loading sessions </summary>
+        private GameSession gameSession;
+
+        private static string GameSessionDirectory { get { return Path.Combine(Application.persistentDataPath, "GameSession"); } }
+        private static string GameSessionPath { get { return Path.Combine(GameSessionDirectory, "session.json"); } }
 
         [Header("UI")]
         #region UI
@@ -82,9 +89,86 @@ namespace Blackjack
             stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, ExitBettingState);
             stateMachine.Add(GameState.Dealing, EnterDealingState, UpdateDealingState, null);
             stateMachine.Add(GameState.Playing, EnterPlayingState, UpdatePlayingState, null);
-            stateMachine.Add(GameState.Result, EnterResultState, null, ExitResultState);            
+            stateMachine.Add(GameState.Result, EnterResultState, null, ExitResultState);
+
+            // try to load a game session from a previous time played
+            bool sessionLoaded = LoadSession();
+            if (sessionLoaded)
+            {
+                LoadPlayerData(gameSession.playerDatas);
+            }
+            else
+            {
+                // create a session since one could not be loaded
+                gameSession = new GameSession(seed, minimumBetAmount.Value, startingPlayerCash.Value);
+            }
 
             stateMachine.SwitchTo(GameState.Shuffle);
+        }
+
+        /// <summary> Load a game session from application data path </summary>
+        /// <returns> boolean for success if found a matching file </returns>
+        private bool LoadSession()
+        {
+            string gameSessionDirectory = GameSessionDirectory;
+            if (!Directory.Exists(gameSessionDirectory))
+            {
+                Directory.CreateDirectory(gameSessionDirectory);
+            }
+
+            string gameSessionPath = GameSessionPath;
+            if (!File.Exists(gameSessionPath))
+            {
+                return false;
+            }
+
+            string jsonData = File.ReadAllText(gameSessionPath);
+            if (string.IsNullOrEmpty(jsonData))
+            {
+                return false;
+            }
+
+            gameSession = JsonUtility.FromJson<GameSession>(jsonData);
+            return true;
+        }
+
+        /// <summary> Save out current game session (only player cash at the moment) </summary>
+        private void SaveSession()
+        {
+            gameSession.playerDatas = new ScorerData[players.Length];
+            for (int i = 0; i < players.Length; i++)
+            {
+                gameSession.playerDatas[i] = players[i].scorerData;
+            }
+
+            string gameSessionPath = GameSessionPath;
+            try
+            {
+                File.WriteAllText(gameSessionPath, JsonUtility.ToJson(gameSession));
+            }
+            catch (System.Exception e)
+            {
+                Debug.Log("Save failed: " + e.Message);
+            }
+        }
+
+        /// <summary> Load player data from a loaded game session </summary>
+        /// <remarks> Only loading player cash for the time being </remarks>
+        /// <param name="playerDatas"></param>
+        private void LoadPlayerData(ScorerData[] playerDatas)
+        {
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (playerDatas[i].cash > 0)
+                {
+                    players[i].Initialize(playerDatas[i].cash);
+                }
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveSession();
         }
 
         private void Update()
@@ -163,6 +247,7 @@ namespace Blackjack
             currentPlayerTurnIndex++;
             while (currentPlayerTurnIndex < players.Length)
             {
+                // if not joined or bet is 0
                 if (players[currentPlayerTurnIndex].scorerData.hands == null ||
                     players[currentPlayerTurnIndex].scorerData.hands.Count == 0 ||
                     players[currentPlayerTurnIndex].scorerData.hands[0].bet == 0)
@@ -196,6 +281,7 @@ namespace Blackjack
 
             dealer.UpdateScore();
 
+            // dealer must keep drawing cards when score is below 17
             while (dealer.scorerData.hands[0].score < 17)
             {
                 DealCard(dealer, false);
