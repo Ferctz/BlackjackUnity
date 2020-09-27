@@ -67,8 +67,8 @@ namespace Blackjack
             stateMachine = new StateMachine<GameState>();
             stateMachine.Add(GameState.Shuffle, EnterShuffleState, UpdateShuffleState, null);
             stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, ExitBettingState);
-            stateMachine.Add(GameState.Dealing, EnterDealingState, null, null);
-            stateMachine.Add(GameState.Playing, null, null, null);
+            stateMachine.Add(GameState.Dealing, EnterDealingState, UpdateDealingState, null);
+            stateMachine.Add(GameState.Playing, EnterPlayingState, null, null);
             stateMachine.Add(GameState.Result, null, null, null);            
 
             stateMachine.SwitchTo(GameState.Shuffle);
@@ -136,6 +136,13 @@ namespace Blackjack
             sprite = cardSprites[spriteIndex];
 
             return true;
+        }
+
+        private void ShowPlayerActionButtons(bool isVisible)
+        {
+            standButton.gameObject.SetActive(isVisible);
+            hitButton.gameObject.SetActive(isVisible);
+            doubleButton.gameObject.SetActive(isVisible);
         }
 
         #region UI Actions
@@ -252,6 +259,11 @@ namespace Blackjack
             dealer.UpdateScore();
 
             stateMachine.SwitchTo(GameState.Playing);
+        }
+
+        private void EnterPlayingState()
+        {
+            ShowPlayerActionButtons(true);
         }
 
         #endregion

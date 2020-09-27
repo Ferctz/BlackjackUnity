@@ -89,3 +89,4 @@ MonoBehaviour:
     suit: 0
     rank: 0
     isHidden: 0
+  image: {fileID: 5228062930968191164}

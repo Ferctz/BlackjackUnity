@@ -46,7 +46,41 @@ namespace Blackjack
         /// <summary> Generate a score based on cards in hand as per blackjack rules </summary>
         public void UpdateScore()
         {
-            
+            // getting a hand's score as soft (ie. aces are 11s)
+            int score = 0;
+            for (int i = 0; i < scorerData.hands[0].handCards.Count; i++)
+            {
+                if (scorerData.hands[0].handCards[i].cardData.isHidden)
+                {
+                    continue;
+                }
+                score += CardData.CardValue(scorerData.hands[0].handCards[i].cardData.rank, true);
+            }
+
+            // if soft hand score is a bust, try to score as hard (ie. aces are 1s)
+            if (score > 21)
+            {
+                score = 0;
+                for (int i = 0; i < scorerData.hands[0].handCards.Count; i++)
+                {
+                    score += CardData.CardValue(scorerData.hands[0].handCards[i].cardData.rank, false);
+                }
+
+                if (score > 21)
+                {
+                    SetHandState(HandState.Bust);
+                }
+            }
+
+            scorerData.hands[0].score = score;
+            scoreText.text = score.ToString();
+        }
+
+        public void SetHandState(HandState state)
+        {
+            scorerData.hands[0].handState = state;
+
+            handState.text = state.ToString();
         }
     }
 

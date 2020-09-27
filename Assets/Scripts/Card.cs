@@ -64,5 +64,34 @@ namespace Blackjack
             this.rank = rank;
             this.isHidden = isHidden;
         }
+
+        /// <summary>  </summary>
+        /// <param name="rank"></param>
+        /// <param name="isHandSoft"> a "soft" hand means aces are valued as 11, else 1 </param>
+        /// <returns> Numerical value of card based on rank </returns>
+        public static int CardValue(Rank rank, bool isHandSoft)
+        {
+            switch (rank)
+            {
+                case Rank.Ace:
+                    return isHandSoft ? 11 : 1;
+                case Rank.Two: return 2;
+                case Rank.Three: return 3;
+                case Rank.Four: return 4;
+                case Rank.Five: return 5;
+                case Rank.Six: return 6;
+                case Rank.Seven: return 7;
+                case Rank.Eight: return 8;
+                case Rank.Nine: return 9;
+                case Rank.Ten:
+                case Rank.Jack:
+                case Rank.Queen:
+                case Rank.King:
+                    return 10;
+            }
+
+            Debug.LogWarning("Invalid Rank: " + rank);
+            return 0;
+        }
     }
 }

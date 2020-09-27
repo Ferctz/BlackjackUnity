@@ -1594,7 +1594,7 @@ MonoBehaviour:
   - {fileID: 936907618}
   - {fileID: 1267136385}
   - {fileID: 661496909}
-  cardPool: {fileID: 0}
+  cardPool: {fileID: 819311365}
   dealButton: {fileID: 1780519315}
   standButton: {fileID: 732787147}
   hitButton: {fileID: 1513696724}
