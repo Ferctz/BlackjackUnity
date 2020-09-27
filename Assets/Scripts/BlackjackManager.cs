@@ -54,6 +54,9 @@ namespace Blackjack
         private void Awake()
         {
             dealButton.onClick.AddListener(DealCards);
+            standButton.onClick.AddListener(PlayerStand);
+            hitButton.onClick.AddListener(PlayerHit);
+            doubleButton.onClick.AddListener(PlayerDouble);
 
             for (int i = 0; i < players.Length; i++)
             {
@@ -167,7 +170,32 @@ namespace Blackjack
             // no players left to go to, dealer's turn
             ShowPlayerActionButtons(false);
 
-            // go to dealer
+            StartDealerTurn();
+        }
+
+        private void StartDealerTurn()
+        {
+            // unhide dealer's first card
+            Card hiddenCard = dealer.scorerData.hands[0].handCards[0];
+            hiddenCard.cardData.isHidden = false;
+            Sprite cardSprite;
+            if (GetCardSprite(hiddenCard.cardData.suit, hiddenCard.cardData.rank, out cardSprite))
+            {
+                hiddenCard.Initialize(cardSprite, hiddenCard.cardData);
+            }
+
+            dealer.UpdateScore();
+
+            while (dealer.scorerData.hands[0].score < 17)
+            {
+                DealCard(dealer, false);
+                dealer.UpdateScore();
+            }
+
+            if (dealer.scorerData.hands[0].score <= 21)
+            {
+                dealer.SetHandState(HandState.Stand);
+            }
         }
 
         private void ShowPlayerActionButtons(bool isVisible)
@@ -181,6 +209,42 @@ namespace Blackjack
         private void DealCards()
         {
             stateMachine.SwitchTo(GameState.Dealing);
+        }
+
+        private void PlayerStand()
+        {
+            players[currentPlayerTurnIndex].SetHandState(HandState.Stand);
+
+            StartNextPlayerTurn();
+        }
+
+        private void PlayerHit()
+        {
+            DealCard(players[currentPlayerTurnIndex], false);
+
+            // update score
+            players[currentPlayerTurnIndex].UpdateScore();
+
+            if (players[currentPlayerTurnIndex].scorerData.hands[0].handState == HandState.Bust)
+            {
+                StartNextPlayerTurn();
+            }
+        }
+
+        private void PlayerDouble()
+        {
+            AddBet(currentPlayerTurnIndex);
+            DealCard(players[currentPlayerTurnIndex], false);
+
+            // update score
+            players[currentPlayerTurnIndex].UpdateScore();
+
+            if (players[currentPlayerTurnIndex].scorerData.hands[0].handState == HandState.Bust)
+            {
+                players[currentPlayerTurnIndex].scorerData.hands[0].handState = HandState.Stand;
+            }
+
+            StartNextPlayerTurn();
         }
 
         #endregion
