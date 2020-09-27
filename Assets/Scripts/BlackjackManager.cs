@@ -61,6 +61,10 @@ namespace Blackjack
             doubleButton.onClick.AddListener(PlayerDouble);
             rebetButton.onClick.AddListener(Rebet);
             newGameButton.onClick.AddListener(NewGame);
+            settingsButton.onClick.AddListener(() => EnableSettingsScreen(true));
+            settingsBackButton.onClick.AddListener(() => EnableSettingsScreen(false));
+            minimumBetSlider.onValueChanged.AddListener(MinimumBetChanged);
+            startingCashSlider.onValueChanged.AddListener(StartingCashChanged);
 
             for (int i = 0; i < players.Length; i++)
             {
@@ -218,6 +222,32 @@ namespace Blackjack
                 cardPool.Release(cardsDealt[i]);
             }
             cardsDealt.Clear();
+        }
+
+        private void EnableSettingsScreen(bool enabled)
+        {
+            settingsScreen.interactable = enabled;
+            settingsScreen.alpha = enabled ? 1f : 0f;
+
+            minimumBetSlider.value = minimumBetAmount.Value;
+            minimumBetValueText.text = minimumBetAmount.Value.ToString();
+            startingCashSlider.value = startingPlayerCash.Value;
+            startingCashValueText.text = startingPlayerCash.Value.ToString();
+        }
+
+        private void MinimumBetChanged(float value)
+        {
+            minimumBetAmount.Value = (int)value;
+            minimumBetValueText.text = minimumBetAmount.Value.ToString();
+        }
+
+        private void StartingCashChanged(float value)
+        {
+            // if starting cash changes, min bet cannot exceed starting cash
+            minimumBetSlider.maxValue = (int)value;
+
+            startingPlayerCash.Value = (int)value;
+            startingCashValueText.text = startingPlayerCash.Value.ToString();
         }
 
         #region UI Actions
