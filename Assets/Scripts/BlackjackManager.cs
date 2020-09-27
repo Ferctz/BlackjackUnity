@@ -23,6 +23,9 @@ namespace Blackjack
         private Deck deck;
         private int seed = 0;
 
+        [SerializeField] private Dealer dealer;
+        [SerializeField] private Player[] players;
+
         private void Start()
         {
             // populate state machine with states & switch to inactive state
