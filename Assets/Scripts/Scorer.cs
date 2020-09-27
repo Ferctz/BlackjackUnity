@@ -18,12 +18,20 @@ namespace Blackjack
 
     public class Scorer : MonoBehaviour
     {
-        public ScorerData playerData;
+        public ScorerData scorerData;
 
         #region UI
         public Text scoreText;
         public Text handState;
         #endregion
+
+        public virtual void Initialize(int startingCash)
+        {
+            scorerData.cash = startingCash;
+            scorerData.hands = new List<Hand>();
+            Hand hand = new Hand();
+            scorerData.hands.Add(hand);
+        }
     }
 
     [Serializable]

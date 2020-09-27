@@ -47,18 +47,48 @@ namespace Blackjack
         [SerializeField] private Button settingsBackButton;
         #endregion
 
+        private void Awake()
+        {
+            dealButton.onClick.AddListener(DealCards);
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                int playerIndex = i;
+                players[i].joinButton.onClick.AddListener(() => AddPlayer(playerIndex));
+            }
+        }
+
         private void Start()
         {
             // populate state machine with states & switch to inactive state
             stateMachine = new StateMachine<GameState>();
-            stateMachine.Add(GameState.Shuffle, EnterShuffleState, null, null);
-            stateMachine.Add(GameState.Betting, null, null, null);
+            stateMachine.Add(GameState.Shuffle, EnterShuffleState, UpdateShuffleState, null);
+            stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, null);
             stateMachine.Add(GameState.Dealing, null, null, null);
             stateMachine.Add(GameState.Playing, null, null, null);
             stateMachine.Add(GameState.Result, null, null, null);            
 
             stateMachine.SwitchTo(GameState.Shuffle);
         }
+
+        public void AddPlayer(int playerId)
+        {
+            if (playerId < 0 || playerId > GameConstants.MAXIMUM_PLAYER_COUNT)
+            {
+                Debug.LogWarning("Invalid player Id");
+                return;
+            }
+
+            players[playerId].Initialize(startingPlayerCash.Value);
+        }
+
+        #region UI Actions
+        private void DealCards()
+        {
+            stateMachine.SwitchTo(GameState.Dealing);
+        }
+
+        #endregion
 
         #region State Machine Methods
 
@@ -67,6 +97,49 @@ namespace Blackjack
             deck = new Deck();
             seed = (int)System.DateTime.Now.Ticks;
             deck.Shuffle(seed, numberOfDecks.Value);
+        }
+
+        private void UpdateShuffleState()
+        {
+            stateMachine.SwitchTo(GameState.Betting);
+        }
+
+        private void EnterBettingState()
+        {
+            dealButton.gameObject.SetActive(true);
+            settingsButton.gameObject.SetActive(true);
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].scorerData.cash > 0)
+                {
+                    players[i].betButton.gameObject.SetActive(true);
+                }
+                else
+                {
+                    players[i].joinButton.gameObject.SetActive(true);
+                }
+            }
+        }
+
+        private void UpdateBettingState()
+        {
+            for (int i = 0; i < players.Length; i++)
+            {
+                // ie if player not initialized
+                if (players[i].scorerData.hands == null || players[i].scorerData.hands.Count == 0)
+                {
+                    continue;
+                }
+
+                if (players[i].scorerData.hands[0].bet > 0)
+                {
+                    dealButton.interactable = true;
+                    return;
+                }
+            }
+
+            dealButton.interactable = false;
         }
         #endregion
     }

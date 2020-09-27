@@ -16,6 +16,17 @@ namespace Blackjack
         public GameObject playerTurnIndicator;
         #endregion
 
+        public override void Initialize(int startingCash)
+        {
+            base.Initialize(startingCash);
 
+            joinButton.gameObject.SetActive(false);
+            aiButton.gameObject.SetActive(false);
+            betButton.gameObject.SetActive(true);
+            betText.gameObject.SetActive(true);
+            cashText.gameObject.SetActive(true);
+
+            cashText.text = startingCash.ToString();
+        }
     }
 }
