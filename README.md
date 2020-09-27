@@ -29,8 +29,10 @@ Data structure for cards that are part of the deck is handled by a stack. 416 Ca
 
 Instances of card prefab are pooled and reused on consecutive plays. CardPool.cs inherits from the base pool class Pool.cs.
 
+Hand splitting is accounted for as scorers can have multiple hands. Checking for hand splitting logic would go inside of BlackjackManager.UpdateDealingState() when a scorer is dealt their second hand.
+
 GameSession.cs contains the serializale struct for saving a game session. Session data inside is saved out to persistent data path. Sessions are loaded on Start() of BlackjackManager.cs and saved whenever OnApplicationQuit() is fired.
 
 **How To Play**
 
-Pull down the repo, open the project using Unity 2018.4.21f1 and hit play.
+Pull down the repo, open the project using Unity 2018.4.21f1, open up Game scene under Assets/Scene/Game.unity, and hit play.
