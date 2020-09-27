@@ -30,6 +30,8 @@ namespace Blackjack
         [SerializeField] private Dealer dealer;
         [SerializeField] private Player[] players;
 
+        [SerializeField] private CardPool cardPool;
+
         [Header("UI")]
         #region UI
         [SerializeField] private Button dealButton;
@@ -77,6 +79,8 @@ namespace Blackjack
             stateMachine.Update();
         }
 
+        /// <summary> When a player hits "Join". Initializes a player to play bets </summary>
+        /// <param name="playerId"> index of player from players array </param>
         public void AddPlayer(int playerId)
         {
             if (playerId < 0 || playerId > GameConstants.MAXIMUM_PLAYER_COUNT)
@@ -88,6 +92,8 @@ namespace Blackjack
             players[playerId].Initialize(startingPlayerCash.Value);
         }
 
+        /// <summary> Adds a bet matching minimum bet from player's wallet to enter dealing phase </summary>
+        /// <param name="playerId"></param>
         public void AddBet(int playerId)
         {
             if (playerId < 0 || playerId > GameConstants.MAXIMUM_PLAYER_COUNT)
@@ -97,6 +103,39 @@ namespace Blackjack
             }
 
             players[playerId].AddBet(minimumBetAmount.Value);
+        }
+
+        private void DealCard(Scorer scorer, bool isHidden)
+        {
+            CardData cardData;
+            if (deck.GetTopCard(out cardData))
+            {
+                cardData.isHidden = isHidden;
+                Sprite cardSprite = backsideSprite;
+                if (isHidden || GetCardSprite(cardData.suit, cardData.rank, out cardSprite))
+                {
+                    Card card = cardPool.Create(Vector3.zero, Quaternion.identity);
+                    card.Initialize(cardSprite, cardData);
+
+                    scorer.AddCard(card);
+                }
+            }
+        }
+
+        private bool GetCardSprite(Suit suit, Rank rank, out Sprite sprite)
+        {
+            sprite = null;
+            if ((suit < 0 || suit >= Suit.COUNT) ||
+                (rank < 0 || rank >= Rank.COUNT))
+            {
+                Debug.LogWarning("Invalid Suit or Rank! Suit: " + suit + ", Rank: " + rank);
+                return false;
+            }
+
+            int spriteIndex = ((int)suit * (int)Rank.COUNT) + (int)rank;
+            sprite = cardSprites[spriteIndex];
+
+            return true;
         }
 
         #region UI Actions
@@ -178,6 +217,41 @@ namespace Blackjack
                 players[i].aiButton.gameObject.SetActive(false);
                 players[i].betButton.gameObject.SetActive(false);
             }
+        }
+
+        private void UpdateDealingState()
+        {
+            // TODO: modify this into an elegant wait and do in between each deal
+            // for now just deal all cards at once and advance to next state
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].scorerData.hands == null ||
+                    players[i].scorerData.hands.Count == 0 ||
+                    players[i].scorerData.hands[0].bet == 0)
+                {
+                    continue;
+                }
+                DealCard(players[i], false);
+                players[i].UpdateScore();
+            }
+            DealCard(dealer, true);
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                if (players[i].scorerData.hands == null ||
+                    players[i].scorerData.hands.Count == 0 ||
+                    players[i].scorerData.hands[0].bet == 0)
+                {
+                    continue;
+                }
+                DealCard(players[i], false);
+                players[i].UpdateScore();
+            }
+
+            DealCard(dealer, false);
+            dealer.UpdateScore();
+
+            stateMachine.SwitchTo(GameState.Playing);
         }
 
         #endregion

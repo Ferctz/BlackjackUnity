@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Blackjack
 {
@@ -33,6 +34,20 @@ namespace Blackjack
     public class Card : MonoBehaviour
     {
         public CardData cardData;
+
+        public Image image;
+
+        public void Initialize(Sprite sprite, CardData cardData)
+        {
+            image.sprite = sprite;
+            this.cardData = cardData;
+        }
+
+        public void DisableCard()
+        {
+            image.sprite = null;
+            cardData = default(CardData);
+        }
     }
 
     [Serializable]

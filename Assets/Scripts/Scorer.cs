@@ -23,6 +23,7 @@ namespace Blackjack
         #region UI
         public Text scoreText;
         public Text handState;
+        public Transform handRoot;
         #endregion
 
         public virtual void Initialize(int startingCash)
@@ -31,6 +32,21 @@ namespace Blackjack
             scorerData.hands = new List<Hand>();
             Hand hand = new Hand();
             scorerData.hands.Add(hand);
+        }
+
+        public void AddCard(Card card)
+        {
+            scorerData.hands[0].handCards.Add(card);
+
+            card.transform.SetParent(handRoot);
+            card.transform.localPosition = Vector3.zero;
+            card.transform.localScale = Vector3.one;
+        }
+
+        /// <summary> Generate a score based on cards in hand as per blackjack rules </summary>
+        public void UpdateScore()
+        {
+            
         }
     }
 
