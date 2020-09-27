@@ -23,6 +23,9 @@ namespace Blackjack
         private Deck deck;
         private int seed = 0;
 
+        [SerializeField] private Sprite[] cardSprites;
+        [SerializeField] private Sprite backsideSprite;
+
         [SerializeField] private Dealer dealer;
         [SerializeField] private Player[] players;
 

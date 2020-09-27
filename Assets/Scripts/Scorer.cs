@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Blackjack
 {
@@ -18,6 +19,11 @@ namespace Blackjack
     public class Scorer : MonoBehaviour
     {
         public ScorerData playerData;
+
+        #region UI
+        public Text scoreText;
+        public Text handState;
+        #endregion
     }
 
     [Serializable]
