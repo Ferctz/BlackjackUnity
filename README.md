@@ -1,47 +1,36 @@
 # Blackjack Developer Coding Assignment
 
-## Objective
-
-Take 4 hours and create a game of Blackjack!
-
-### Requirements Description
-
-* Create a fully functional game of Blackjack from scratch using only standard classes and common frameworks.
-
-**Rules should follow:**
-
-* http://en.wikipedia.org/wiki/Blackjack.
-* Dealer stands on 17
-* Deck is made of up 8 standard decks of cards
-* Ignore the hand splitting 
-
-**Expected Features**
+**Features Implemented**
 
 * Single-player game (dealer and one player at minimum)
 * Basic Blackjack rules as described here: https://en.wikipedia.org/wiki/Blackjack#Rules
 * The player should have cash and be able to bet according to the rules here: https://en.wikipedia.org/wiki/Blackjack#Rules_of_play_at_casinos (You can simplify these, as long as the basic bet/reward structure is in place)
 * The ability to play multiple rounds with a persistent cash pool
-* The ability to save game state and restore it after restarting
-* Customizable game settings (Some examples of things to make adjustable: min bet amount, player starting cash amount, etc.)
-* You can use this image for cards: http://math.hws.edu/eck/cs124/javanotes6/c13/cards.png
+* The ability to save game state and restore it after restarting (due to time constraints, only cash is reloaded however player state is being saved)
+* Customizable game settings (min bet amount & player starting cash amount)
+* Create a fully functional game of Blackjack from scratch using only standard classes and common frameworks.
 
-**Nice-to-Haves**
+**Nice-to-Haves Implemented**
 
-* Hand-splitting
-* Between 2-6 user controlled players at the table where players can enter/leave the table at any time (all controlled locally)
-* Single-player mode where other players at table are AI
-* Game stats tracking (highest cash amount, etc.)
-* Animations!
+* Between 2-6 user controlled players at the table where players can enter/leave the table at any time (all controlled locally) (leaving is coming soon)
+* Animations! (player turn animation)
 
-**Evaluation Criteria (in order of importance)**
+**Outline of Code Architecture**
 
-1. The code does what it says it does.
-2. **Well-designed architecture.** Assume this the first phase in a project with a much larger scope, and design accordingly. It's better to have well thought-out architecture with fewer features than to have tons of bells and whistles that are hacked together.
-3. **Clean code that follows best practices.** We won't reject you because of a single missing access modifier, but you should be fairly dilligent. And don't worry about minor permutations of code style, you can learn our styles once you're onboard.
-4. **Demonstrates some creativity and uniqueness.** Whatever that means to you - show us what you love to do!
+This project implements a finite state machine to drive the navigation between the states inside the game of Blackjack. Specifically, BlackjackManager.cs implements this state machine and the states are: Shuffling, Betting, Dealing, Playing, and Results.
 
-**Deliverables**
+This approach came to be due to the debugging power of a state machine. Not only does it print out a debug message for every new state traversed, methods for enter/update/leave per state are explicitly assigned.
 
-1. Git repository with history intact. Commit early and often so that we can trace the app’s development history. The more you show the better.
-2. Include a README explaining the features you've implemented, and an outline of code architecture.
+When thinking about a larger scope, this game flow works great if this game became networked. BlackjackManager.cs is what you'd have working as server code and you would only need to set up a few RPC calls to sync player states on client machines.
 
+Player.cs and Dealer.cs both inherit from Scorer.cs. Each scorer has a ScoreData struct which tracks all hands per play, as well as their associated bet value. A card's value is calculated inside Scorer.cs.
+
+Data structure for cards that are part of the deck is handled by a stack. 416 CardData structs are created, randomized and added to the stack. This is done inside Deck.cs.
+
+Instances of card prefab are pooled and reused on consecutive plays. CardPool.cs inherits from the base pool class Pool.cs.
+
+GameSession.cs contains the serializale struct for saving a game session. Session data inside is saved out to persistent data path. Sessions are loaded on Start() of BlackjackManager.cs and saved whenever OnApplicationQuit() is fired.
+
+**How To Play**
+
+Pull down the repo, open the project using Unity 2018.4.21f1 and hit play.
