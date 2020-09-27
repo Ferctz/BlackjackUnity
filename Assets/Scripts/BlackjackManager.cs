@@ -32,6 +32,8 @@ namespace Blackjack
 
         [SerializeField] private CardPool cardPool;
 
+        private int currentPlayerTurnIndex = -1;
+
         [Header("UI")]
         #region UI
         [SerializeField] private Button dealButton;
@@ -68,7 +70,7 @@ namespace Blackjack
             stateMachine.Add(GameState.Shuffle, EnterShuffleState, UpdateShuffleState, null);
             stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, ExitBettingState);
             stateMachine.Add(GameState.Dealing, EnterDealingState, UpdateDealingState, null);
-            stateMachine.Add(GameState.Playing, EnterPlayingState, null, null);
+            stateMachine.Add(GameState.Playing, EnterPlayingState, UpdatePlayingState, null);
             stateMachine.Add(GameState.Result, null, null, null);            
 
             stateMachine.SwitchTo(GameState.Shuffle);
@@ -136,6 +138,36 @@ namespace Blackjack
             sprite = cardSprites[spriteIndex];
 
             return true;
+        }
+
+        private void StartNextPlayerTurn()
+        {
+            if (currentPlayerTurnIndex >= 0)
+            {
+                players[currentPlayerTurnIndex].EndTurn();
+            }
+
+            currentPlayerTurnIndex++;
+            while (currentPlayerTurnIndex < players.Length)
+            {
+                if (players[currentPlayerTurnIndex].scorerData.hands == null ||
+                    players[currentPlayerTurnIndex].scorerData.hands.Count == 0 ||
+                    players[currentPlayerTurnIndex].scorerData.hands[0].bet == 0)
+                {
+                    currentPlayerTurnIndex++;
+                    continue;
+                }
+                else // ie. valid player
+                {
+                    players[currentPlayerTurnIndex].StartTurn();
+                    return;
+                }
+            }
+
+            // no players left to go to, dealer's turn
+            ShowPlayerActionButtons(false);
+
+            // go to dealer
         }
 
         private void ShowPlayerActionButtons(bool isVisible)
@@ -264,8 +296,20 @@ namespace Blackjack
         private void EnterPlayingState()
         {
             ShowPlayerActionButtons(true);
+
+            currentPlayerTurnIndex = -1;
+            StartNextPlayerTurn();
         }
 
+        private void UpdatePlayingState()
+        {
+            // advance to results state only once dealer is in stand or bust
+            if (dealer.scorerData.hands[0].handState == HandState.Stand ||
+                dealer.scorerData.hands[0].handState == HandState.Bust)
+            {
+                stateMachine.SwitchTo(GameState.Result);
+            }
+        }
         #endregion
     }
 }

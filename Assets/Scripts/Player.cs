@@ -49,5 +49,15 @@ namespace Blackjack
             scorerData.cash = cash;
             cashText.text = show ? cash.ToString() : string.Empty;
         }
+
+        public void StartTurn()
+        {
+            playerTurnIndicator.SetActive(true);
+        }
+
+        public void EndTurn()
+        {
+            playerTurnIndicator.SetActive(false);
+        }
     }
 }
