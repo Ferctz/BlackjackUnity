@@ -55,6 +55,7 @@ namespace Blackjack
             {
                 int playerIndex = i;
                 players[i].joinButton.onClick.AddListener(() => AddPlayer(playerIndex));
+                players[i].betButton.onClick.AddListener(() => AddBet(playerIndex));
             }
         }
 
@@ -63,12 +64,17 @@ namespace Blackjack
             // populate state machine with states & switch to inactive state
             stateMachine = new StateMachine<GameState>();
             stateMachine.Add(GameState.Shuffle, EnterShuffleState, UpdateShuffleState, null);
-            stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, null);
-            stateMachine.Add(GameState.Dealing, null, null, null);
+            stateMachine.Add(GameState.Betting, EnterBettingState, UpdateBettingState, ExitBettingState);
+            stateMachine.Add(GameState.Dealing, EnterDealingState, null, null);
             stateMachine.Add(GameState.Playing, null, null, null);
             stateMachine.Add(GameState.Result, null, null, null);            
 
             stateMachine.SwitchTo(GameState.Shuffle);
+        }
+
+        private void Update()
+        {
+            stateMachine.Update();
         }
 
         public void AddPlayer(int playerId)
@@ -80,6 +86,17 @@ namespace Blackjack
             }
 
             players[playerId].Initialize(startingPlayerCash.Value);
+        }
+
+        public void AddBet(int playerId)
+        {
+            if (playerId < 0 || playerId > GameConstants.MAXIMUM_PLAYER_COUNT)
+            {
+                Debug.LogWarning("Invalid player Id");
+                return;
+            }
+
+            players[playerId].AddBet(minimumBetAmount.Value);
         }
 
         #region UI Actions
@@ -141,6 +158,28 @@ namespace Blackjack
 
             dealButton.interactable = false;
         }
+
+        private void ExitBettingState()
+        {
+            dealButton.gameObject.SetActive(false);
+
+            dealer.Initialize(startingPlayerCash.Value);
+        }
+
+        private void EnterDealingState()
+        {
+            dealButton.gameObject.SetActive(false);
+            settingsButton.gameObject.SetActive(false);
+
+            // turning off UI buttons from betting/joining/AI
+            for (int i = 0; i < players.Length; i++)
+            {
+                players[i].joinButton.gameObject.SetActive(false);
+                players[i].aiButton.gameObject.SetActive(false);
+                players[i].betButton.gameObject.SetActive(false);
+            }
+        }
+
         #endregion
     }
 }

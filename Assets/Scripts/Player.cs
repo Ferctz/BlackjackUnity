@@ -28,5 +28,26 @@ namespace Blackjack
 
             cashText.text = startingCash.ToString();
         }
+
+        public void AddBet(int betAmount, int handIndex = 0)
+        {
+            if (betAmount > scorerData.cash)
+            {
+                Debug.Log("Not enough cash in wallet!");
+                return;
+            }
+
+            int newCash = scorerData.cash - betAmount;
+            SetCash(newCash);
+
+            scorerData.hands[handIndex].bet += betAmount;
+            betText.text = "±" + scorerData.hands[handIndex].bet.ToString();
+        }
+
+        public void SetCash(int cash, bool show = true)
+        {
+            scorerData.cash = cash;
+            cashText.text = show ? cash.ToString() : string.Empty;
+        }
     }
 }
