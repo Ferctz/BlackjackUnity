@@ -1,5 +1,6 @@
 ﻿using Blackjack.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Blackjack
 {
@@ -28,6 +29,23 @@ namespace Blackjack
 
         [SerializeField] private Dealer dealer;
         [SerializeField] private Player[] players;
+
+        [Header("UI")]
+        #region UI
+        [SerializeField] private Button dealButton;
+        [SerializeField] private Button standButton;
+        [SerializeField] private Button hitButton;
+        [SerializeField] private Button doubleButton;
+        [SerializeField] private Button rebetButton;
+        [SerializeField] private Button newGameButton;
+        [SerializeField] private CanvasGroup settingsScreen;
+        [SerializeField] private Button settingsButton;
+        [SerializeField] private Slider minimumBetSlider;
+        [SerializeField] private Text minimumBetValueText;
+        [SerializeField] private Slider startingCashSlider;
+        [SerializeField] private Text startingCashValueText;
+        [SerializeField] private Button settingsBackButton;
+        #endregion
 
         private void Start()
         {
